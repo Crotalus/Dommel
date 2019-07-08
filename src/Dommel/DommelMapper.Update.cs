@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -55,7 +56,17 @@ namespace Dommel
                                               .Where(p => p.GetSetMethod() != null)
                                               .ToArray();
 
-                var columnNames = typeProperties.Select(p => $"{Resolvers.Column(p, sqlBuilder)} = {sqlBuilder.PrefixParameter(p.Name)}").ToArray();
+                var columnNames = typeProperties.Select(p =>
+                {
+                    var attr = p.GetCustomAttribute<ColumnAttribute>();
+                    string param;
+                    if(attr?.TypeName != null)
+                         param = $"{sqlBuilder.PrefixParameter(p.Name)}::{attr.TypeName}";
+                    else
+                        param = sqlBuilder.PrefixParameter(p.Name);
+
+                    return $"{Resolvers.Column(p, sqlBuilder)} = {param}";
+                }).ToArray();
                 var keyPropertyWhereClauses = keyProperties.Select(p => $"{Resolvers.Column(p, sqlBuilder)} = {sqlBuilder.PrefixParameter(p.Name)}");
                 sql = $"update {tableName} set {string.Join(", ", columnNames)} where {string.Join(" and ", keyPropertyWhereClauses)}";
 

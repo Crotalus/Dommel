@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using System.Linq;
 using System.Reflection;
@@ -214,6 +215,15 @@ namespace Dommel
 
                 LogReceived?.Invoke($"Resolved column name '{columnName}' for '{propertyInfo}'");
                 return columnName;
+            }
+
+            public static string Parameter(PropertyInfo propertyInfo, ISqlBuilder sqlBuilder)
+            {
+                var attr = propertyInfo.GetCustomAttribute<ColumnAttribute>();
+                if(attr?.TypeName != null)
+                    return $"@{propertyInfo.Name}::{attr.TypeName}";
+                else
+                    return $"@{propertyInfo.Name}";
             }
 
             private struct KeyPropertyInfo

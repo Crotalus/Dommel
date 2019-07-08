@@ -96,7 +96,7 @@ namespace Dommel
                 }
 
                 var columnNames = typeProperties.Select(p => Resolvers.Column(p, sqlBuilder)).ToArray();
-                var paramNames = typeProperties.Select(p => "@" + p.Name).ToArray();
+                var paramNames = typeProperties.Select(p => Resolvers.Parameter(p, sqlBuilder)).ToArray();
 
                 sql = sqlBuilder.BuildInsert(tableName, columnNames, paramNames, keyProperty);
 
