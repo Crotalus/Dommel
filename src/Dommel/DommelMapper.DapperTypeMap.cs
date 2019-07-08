@@ -25,7 +25,7 @@ namespace Dommel
                     var cacheKey = type + columnName;
                     if (!_columnNameCache.TryGetValue(cacheKey, out var propertyInfo))
                     {
-                        propertyInfo = type.GetProperties().FirstOrDefault(p => p.GetCustomAttribute<ColumnAttribute>()?.Name == columnName || p.Name == columnName);
+                        propertyInfo = type.GetProperties().FirstOrDefault(p => p.GetCustomAttribute<ColumnAttribute>()?.Name == columnName || p.Name.Equals(columnName) || (DefaultTypeMap.MatchNamesWithUnderscores && p.Name.Equals(columnName.Replace("_", ""), StringComparison.OrdinalIgnoreCase)));
                         _columnNameCache.TryAdd(cacheKey, propertyInfo);
                     }
 
