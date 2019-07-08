@@ -33,7 +33,7 @@ namespace Dommel.Tests
         [Fact]
         public void TestUpdate()
         {
-            var sql = BuildUpdateQuery(SqlBuilder, typeof(Foo));
+            var sql = BuildUpdateQuery<Foo>(SqlBuilder, typeof(Foo));
             Assert.Equal("update Foos set Bar = #Bar where Id = #Id", sql);
         }
 

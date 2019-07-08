@@ -20,7 +20,7 @@ namespace Dommel
         /// <returns>The ID of the inserted entity.</returns>
         public static object Insert<TEntity>(this IDbConnection connection, TEntity entity, IDbTransaction transaction = null) where TEntity : class
         {
-            var sql = BuildInsertQuery(connection, typeof(TEntity));
+            var sql = BuildInsertQuery(connection, typeof(TEntity), entity);
             LogQuery<TEntity>(sql);
             return connection.ExecuteScalar(sql, entity, transaction);
         }
@@ -35,7 +35,7 @@ namespace Dommel
         /// <returns>The ID of the inserted entity.</returns>
         public static Task<object> InsertAsync<TEntity>(this IDbConnection connection, TEntity entity, IDbTransaction transaction = null) where TEntity : class
         {
-            var sql = BuildInsertQuery(connection, typeof(TEntity));
+            var sql = BuildInsertQuery<TEntity>(connection, typeof(TEntity));
             LogQuery<TEntity>(sql);
             return connection.ExecuteScalarAsync(sql, entity, transaction);
         }
@@ -49,7 +49,7 @@ namespace Dommel
         /// <param name="transaction">Optional transaction for the command.</param>
         public static void InsertAll<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction transaction = null) where TEntity : class
         {
-            var sql = BuildInsertQuery(connection, typeof(TEntity));
+            var sql = BuildInsertQuery<TEntity>(connection, typeof(TEntity));
             LogQuery<TEntity>(sql);
             connection.Execute(sql, entities, transaction);
         }
@@ -63,12 +63,12 @@ namespace Dommel
         /// <param name="transaction">Optional transaction for the command.</param>
         public static Task InsertAllAsync<TEntity>(this IDbConnection connection, IEnumerable<TEntity> entities, IDbTransaction transaction = null) where TEntity : class
         {
-            var sql = BuildInsertQuery(connection, typeof(TEntity));
+            var sql = BuildInsertQuery<TEntity>(connection, typeof(TEntity));
             LogQuery<TEntity>(sql);
             return connection.ExecuteAsync(sql, entities, transaction);
         }
 
-        private static string BuildInsertQuery(IDbConnection connection, Type type)
+        private static string BuildInsertQuery<TEntity>(IDbConnection connection, Type type, TEntity entity = null) where TEntity : class
         {
             var sqlBuilder = GetSqlBuilder(connection);
             var cacheKey = new QueryCacheKey(QueryCacheType.Insert, sqlBuilder, type);
@@ -82,7 +82,9 @@ namespace Dommel
                 {
                     if (typeProperty == keyProperty)
                     {
-                        if (isIdentity)
+                        var isDefault = entity == null || (int)typeProperty.GetValue(entity) == (int)Activator.CreateInstance(typeProperty.PropertyType);
+                        //if (isIdentity && entity != null && isDefault)
+                        if (isIdentity && isDefault)
                         {
                             // Skip key properties marked as an identity column.
                             continue;
